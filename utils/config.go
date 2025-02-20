@@ -19,6 +19,7 @@ type Config struct {
 	DBPoolConnectTimeout    time.Duration `mapstructure:"DB_POOL_CONNECT_TIMEOUT"`
 	MigrationURL            string        `mapstructure:"MIGRATION_URL"`
 	WebPort                 string        `mapstructure:"WEB_PORT"`
+	RedisURL                string        `mapstructure:"REDIS_URL"`
 }
 
 // LoadConfig

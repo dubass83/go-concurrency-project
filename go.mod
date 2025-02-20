@@ -3,6 +3,9 @@ module github.com/dubass83/go-concurrency-project
 go 1.24
 
 require (
+	github.com/alexedwards/scs/redisstore v0.0.0-20250212122300-421ef1d8611c
+	github.com/alexedwards/scs/v2 v2.8.0
+	github.com/gomodule/redigo v1.9.2
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/viper v1.19.0

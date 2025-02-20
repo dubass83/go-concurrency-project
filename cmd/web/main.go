@@ -2,17 +2,21 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/redisstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/dubass83/go-concurrency-project/utils"
+	"github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 func main() {
-	// connect to the database
+	// read config
 	conf, err := utils.LoadConfig(".")
 	if err != nil {
 		log.Fatal().
@@ -26,22 +30,22 @@ func main() {
 
 	// ctx, stop := signal.NotifyContext(context.Background(), interaptSignals...)
 	// defer stop()
-
+	// connect to the database
 	connPool, err := pgxpool.NewWithConfig(context.Background(), poolConfig(conf))
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Msg("cannot validate db connection string")
+			Msg("cannot validate the db connection string")
 	}
 	err = connPool.Ping(context.TODO())
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Msg("cannot ping database")
+			Msg("cannot ping the database from the connection pool")
 	}
 
 	// create sessions
-
+	session := initSessions(conf)
 	// create channels
 
 	// create waitgroup
@@ -82,4 +86,26 @@ func poolConfig(conf utils.Config) *pgxpool.Config {
 	}
 
 	return dbConfig
+}
+
+func initSessions(config utils.Config) *scs.SessionManager {
+	// setup session
+	session := scs.New()
+	session.Store = redisstore.New(initRedis(config))
+	session.Lifetime = 24 * time.Hour
+	session.Cookie.Persist = true
+	session.Cookie.SameSite = http.SameSiteLaxMode
+	session.Cookie.Secure = true
+
+	return session
+}
+
+func initRedis(config utils.Config) *redis.Pool {
+	redisPool := &redis.Pool{
+		MaxIdle: 10,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", config.RedisURL)
+		},
+	}
+	return redisPool
 }
