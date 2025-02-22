@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/dubass83/go-concurrency-project/utils"
+	"github.com/go-chi/chi/v5"
 	"github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
@@ -48,13 +51,42 @@ func main() {
 	session := initSessions(conf)
 	// create channels
 
+	// create loggers
+	infoLog := log.Info()
+	errorLog := log.Error()
+
 	// create waitgroup
-
+	wg := sync.WaitGroup{}
 	// set up the application config
-
+	app := Server{
+		Config:   conf,
+		Router:   chi.NewRouter(),
+		Db:       connPool,
+		Session:  session,
+		Wait:     &wg,
+		InfoLog:  infoLog,
+		ErrorLog: errorLog,
+	}
 	// set up mail
 
 	// listen for web connections
+	app.serve()
+}
+
+func (app *Server) serve() {
+	app.AddMidelware()
+	app.MountHandlers()
+	// start http server
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%s", app.Config.WebPort),
+		Handler: app.Router,
+	}
+
+	app.InfoLog.Msg("starting http web server...")
+	err := srv.ListenAndServe()
+	if err != nil {
+		log.Fatal().Err(err).Msgf("failed to start http web server on the port: %s", app.Config.WebPort)
+	}
 }
 
 // PoolConfig create config for db connection pool
