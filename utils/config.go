@@ -20,6 +20,7 @@ type Config struct {
 	MigrationURL            string        `mapstructure:"MIGRATION_URL"`
 	WebPort                 string        `mapstructure:"WEB_PORT"`
 	RedisURL                string        `mapstructure:"REDIS_URL"`
+	PathToTemplate          string        `mapstructure:"PATH_TO_TEMPLATE"`
 }
 
 // LoadConfig
