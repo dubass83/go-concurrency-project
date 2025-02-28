@@ -82,7 +82,7 @@ func (app *Server) serve() {
 		Handler: app.Router,
 	}
 
-	app.InfoLog.Msg("starting http web server...")
+	log.Info().Msgf("starting http web server on the port: %s", app.Config.WebPort)
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatal().Err(err).Msgf("failed to start http web server on the port: %s", app.Config.WebPort)
