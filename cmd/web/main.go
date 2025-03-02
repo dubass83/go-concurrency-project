@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/alexedwards/scs/redisstore"
@@ -51,23 +53,20 @@ func main() {
 	session := initSessions(conf)
 	// create channels
 
-	// create loggers
-	infoLog := log.Info()
-	errorLog := log.Error()
-
 	// create waitgroup
 	wg := sync.WaitGroup{}
 	// set up the application config
 	app := Server{
-		Config:   conf,
-		Router:   chi.NewRouter(),
-		Db:       connPool,
-		Session:  session,
-		Wait:     &wg,
-		InfoLog:  infoLog,
-		ErrorLog: errorLog,
+		Config:  conf,
+		Router:  chi.NewRouter(),
+		Db:      connPool,
+		Session: session,
+		Wait:    &wg,
 	}
 	// set up mail
+
+	// listen for the signals
+	go app.ListenForShutdown()
 
 	// listen for web connections
 	app.serve()
@@ -140,4 +139,21 @@ func initRedis(config utils.Config) *redis.Pool {
 		},
 	}
 	return redisPool
+}
+
+func (app *Server) ListenForShutdown() {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	app.shutdown()
+	os.Exit(0)
+}
+
+func (app *Server) shutdown() {
+	log.Info().Msg("starting shutdown process for the app...")
+
+	app.Wait.Wait()
+
+	log.Info().Msg("all chanels will be stoped and app will be prepared for gracefully shutdown")
+	// TODO close all chanels
 }
