@@ -1,5 +1,6 @@
 BINARY_NAME=myapp
 DSN="host=localhost port=5432 user=postgres password=password dbname=concurrency sslmode=disable timezone=UTC connect_timeout=5"
+DB_URL="postgresql://postgres:password@localhost:5432/concurrency?sslmode=disable"
 REDIS="127.0.0.1:6379"
 
 ## build: Build binary
@@ -36,3 +37,18 @@ restart: stop start
 ## test: runs all tests
 test:
 	go test -v ./...
+
+new_migration:
+	migrate create -ext sql -dir data/migration -seq ${name}
+
+migrate_up:
+	migrate -path data/migration -database ${DB_URL} -verbose up
+
+migrate_up1:
+	migrate -path data/migration -database ${DB_URL} -verbose up 1
+
+migrate_down:
+	migrate -path data/migration -database ${DB_URL} -verbose down
+
+migrate_down1:
+	migrate -path data/migration -database ${DB_URL} -verbose down 1

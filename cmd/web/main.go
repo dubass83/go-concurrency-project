@@ -14,6 +14,9 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/dubass83/go-concurrency-project/utils"
 	"github.com/go-chi/chi/v5"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gomodule/redigo/redis"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
@@ -51,10 +54,12 @@ func main() {
 
 	// create sessions
 	session := initSessions(conf)
+
 	// create channels
 
 	// create waitgroup
 	wg := sync.WaitGroup{}
+
 	// set up the application config
 	app := Server{
 		Config:  conf,
@@ -63,6 +68,9 @@ func main() {
 		Session: session,
 		Wait:    &wg,
 	}
+	// run db migration
+	app.runDbMigration()
+
 	// set up mail
 
 	// listen for the signals
@@ -156,4 +164,20 @@ func (app *Server) shutdown() {
 
 	log.Info().Msg("all chanels will be stoped and app will be prepared for gracefully shutdown")
 	// TODO close all chanels
+}
+
+// runDbMigration run db migration from file to db
+func (app *Server) runDbMigration() {
+	m, err := migrate.New(app.Config.MigrationURL, app.Config.DBSource)
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Msg("can not create migration instance")
+	}
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal().
+			Err(err).
+			Msg("can not run migration up")
+	}
+	log.Info().Msg("successfully run db migration")
 }
