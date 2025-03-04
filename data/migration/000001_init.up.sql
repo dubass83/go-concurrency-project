@@ -6,8 +6,8 @@ CREATE TABLE public.plans (
     id integer NOT NULL,
     plan_name character varying(255),
     plan_amount integer,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
+    created_at timestamp without time zone DEFAULT (now()),
+    updated_at timestamp without time zone DEFAULT '0001-01-01'
 );
 
 
