@@ -52,3 +52,6 @@ migrate_down:
 
 migrate_down1:
 	migrate -path data/migration -database ${DB_URL} -verbose down 1
+
+sqlc:
+	sqlc generate

@@ -45,8 +45,8 @@ CREATE TABLE public.user_plans (
     id integer NOT NULL,
     user_id integer,
     plan_id integer,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
+    created_at timestamp without time zone DEFAULT (now()),
+    updated_at timestamp without time zone DEFAULT '0001-01-01'
 );
 
 
@@ -72,8 +72,8 @@ CREATE TABLE public.users (
     password character varying(60),
     user_active integer DEFAULT 0,
     is_admin integer default 0,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
+    created_at timestamp without time zone DEFAULT (now()),
+    updated_at timestamp without time zone DEFAULT '0001-01-01'
 );
 
 SELECT pg_catalog.setval('public.plans_id_seq', 1, false);
