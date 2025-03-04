@@ -12,6 +12,7 @@ import (
 
 	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/v2"
+	data "github.com/dubass83/go-concurrency-project/data/sqlc"
 	"github.com/dubass83/go-concurrency-project/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-migrate/migrate/v4"
@@ -64,7 +65,7 @@ func main() {
 	app := Server{
 		Config:  conf,
 		Router:  chi.NewRouter(),
-		Db:      connPool,
+		Store:   data.NewStore(connPool),
 		Session: session,
 		Wait:    &wg,
 	}
