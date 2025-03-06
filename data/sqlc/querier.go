@@ -14,14 +14,19 @@ type Querier interface {
 	DeletePlan(ctx context.Context, id int32) error
 	DeleteUser(ctx context.Context, id int32) error
 	DeleteUserByID(ctx context.Context, id int32) error
+	DeleteUserPlanByUserID(ctx context.Context, userID pgtype.Int4) error
 	GetAllPlans(ctx context.Context, arg GetAllPlansParams) ([]Plan, error)
+	GetAllUserPlans(ctx context.Context, arg GetAllUserPlansParams) ([]UserPlan, error)
 	GetAllUsers(ctx context.Context, arg GetAllUsersParams) ([]User, error)
 	GetOnePlan(ctx context.Context, id int32) (Plan, error)
 	GetOneUser(ctx context.Context, id int32) (User, error)
+	GetOneUserPlan(ctx context.Context, id int32) (UserPlan, error)
 	GetUserByEmail(ctx context.Context, email pgtype.Text) (User, error)
 	InsertUser(ctx context.Context, arg InsertUserParams) (User, error)
+	InsertUserPlan(ctx context.Context, arg InsertUserPlanParams) (UserPlan, error)
 	UpdatePlan(ctx context.Context, arg UpdatePlanParams) (Plan, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	UpdateUserPlanByUserID(ctx context.Context, arg UpdateUserPlanByUserIDParams) (UserPlan, error)
 }
 
 var _ Querier = (*Queries)(nil)
