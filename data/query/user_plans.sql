@@ -8,7 +8,7 @@ RETURNING *;
 
 -- name: GetOneUserPlan :one
 SELECT * FROM user_plans
-WHERE id = $1 LIMIT 1;
+WHERE user_id = $1 LIMIT 1;
 
 -- name: GetAllUserPlans :many
 SELECT * FROM user_plans
@@ -16,7 +16,7 @@ ORDER by id
 LIMIT $1
 OFFSET $2;
 
--- name: UpdateUserPlanByUserID :one
+-- name: UpdateUserPlan :one
 UPDATE user_plans
 SET
   plan_id = COALESCE(sqlc.narg('plan_id'), plan_id),
@@ -25,6 +25,6 @@ WHERE
   user_id = sqlc.arg('user_id')
 RETURNING *;
 
--- name: DeleteUserPlanByUserID :exec
+-- name: DeleteUserPlan :exec
 DELETE FROM user_plans
 WHERE user_id = $1;

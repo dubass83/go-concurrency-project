@@ -11,13 +11,13 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const deleteUserPlanByUserID = `-- name: DeleteUserPlanByUserID :exec
+const deleteUserPlan = `-- name: DeleteUserPlan :exec
 DELETE FROM user_plans
 WHERE user_id = $1
 `
 
-func (q *Queries) DeleteUserPlanByUserID(ctx context.Context, userID pgtype.Int4) error {
-	_, err := q.db.Exec(ctx, deleteUserPlanByUserID, userID)
+func (q *Queries) DeleteUserPlan(ctx context.Context, userID pgtype.Int4) error {
+	_, err := q.db.Exec(ctx, deleteUserPlan, userID)
 	return err
 }
 
@@ -61,11 +61,11 @@ func (q *Queries) GetAllUserPlans(ctx context.Context, arg GetAllUserPlansParams
 
 const getOneUserPlan = `-- name: GetOneUserPlan :one
 SELECT id, user_id, plan_id, created_at, updated_at FROM user_plans
-WHERE id = $1 LIMIT 1
+WHERE user_id = $1 LIMIT 1
 `
 
-func (q *Queries) GetOneUserPlan(ctx context.Context, id int32) (UserPlan, error) {
-	row := q.db.QueryRow(ctx, getOneUserPlan, id)
+func (q *Queries) GetOneUserPlan(ctx context.Context, userID pgtype.Int4) (UserPlan, error) {
+	row := q.db.QueryRow(ctx, getOneUserPlan, userID)
 	var i UserPlan
 	err := row.Scan(
 		&i.ID,
@@ -104,7 +104,7 @@ func (q *Queries) InsertUserPlan(ctx context.Context, arg InsertUserPlanParams) 
 	return i, err
 }
 
-const updateUserPlanByUserID = `-- name: UpdateUserPlanByUserID :one
+const updateUserPlan = `-- name: UpdateUserPlan :one
 UPDATE user_plans
 SET
   plan_id = COALESCE($1, plan_id),
@@ -114,14 +114,14 @@ WHERE
 RETURNING id, user_id, plan_id, created_at, updated_at
 `
 
-type UpdateUserPlanByUserIDParams struct {
+type UpdateUserPlanParams struct {
 	PlanID    pgtype.Int4      `json:"plan_id"`
 	UpdatedAt pgtype.Timestamp `json:"updated_at"`
 	UserID    pgtype.Int4      `json:"user_id"`
 }
 
-func (q *Queries) UpdateUserPlanByUserID(ctx context.Context, arg UpdateUserPlanByUserIDParams) (UserPlan, error) {
-	row := q.db.QueryRow(ctx, updateUserPlanByUserID, arg.PlanID, arg.UpdatedAt, arg.UserID)
+func (q *Queries) UpdateUserPlan(ctx context.Context, arg UpdateUserPlanParams) (UserPlan, error) {
+	row := q.db.QueryRow(ctx, updateUserPlan, arg.PlanID, arg.UpdatedAt, arg.UserID)
 	var i UserPlan
 	err := row.Scan(
 		&i.ID,
