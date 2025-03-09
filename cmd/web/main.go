@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
 	"net/http"
 	"os"
@@ -129,6 +130,7 @@ func poolConfig(conf utils.Config) *pgxpool.Config {
 }
 
 func initSessions(config utils.Config) *scs.SessionManager {
+	gob.Register(data.User{})
 	// setup session
 	session := scs.New()
 	session.Store = redisstore.New(initRedis(config))
