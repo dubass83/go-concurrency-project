@@ -90,6 +90,12 @@ func (sender *MailTrapSender) SendEmail(
 		errChan <- fmt.Errorf("failed to set BCC address: %s", err)
 	}
 	m.Subject(email.Subject)
+
+	data := map[string]any{
+		"message": email.Data,
+	}
+	email.Message = data
+
 	// generate and set to the message text plain body
 	templPlain := fmt.Sprintf("%s/%s.plain.gohtml", sender.TemplateDir, email.Template)
 	contentPlain, err := builPlainTextMessage(templPlain, email.Message)
