@@ -83,3 +83,26 @@ func (app *Server) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 func (app *Server) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 
 }
+
+func (app *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
+	sender, err := NewMailSender(app.Config)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to create new mail sender")
+		app.Session.Put(r.Context(), "error", "failed to send test email")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	email := Message{
+		From:      "Maks",
+		FromEmail: "dubass@test.work",
+		Subject:   "test message",
+		To:        []string{"boloto@test.com", "sasas@test.com"},
+		Data:      "Hello world",
+	}
+
+	errChan := make(chan error)
+
+	sender.SendEmail(email, errChan)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}

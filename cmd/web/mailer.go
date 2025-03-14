@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"sync"
 
-	"github.com/dubass83/go-micro-mailer/util"
+	"github.com/dubass83/go-concurrency-project/utils"
 	"github.com/vanng822/go-premailer/premailer"
 	"github.com/wneessen/go-mail"
 )
@@ -43,7 +43,7 @@ type MailTrapSender struct {
 	DoneChan    chan bool
 }
 
-func NewMailSender(conf util.Config) (EmailSender, error) {
+func NewMailSender(conf utils.Config) (EmailSender, error) {
 	switch conf.EmailService {
 	case "mailtrap":
 		return &MailTrapSender{
@@ -54,7 +54,7 @@ func NewMailSender(conf util.Config) (EmailSender, error) {
 			SMTPHost:    "sandbox.smtp.mailtrap.io",
 			SMTPPort:    2525,
 			SMTPAuth:    mail.SMTPAuthPlain,
-			TemplateDir: conf.TemplateDir,
+			TemplateDir: conf.PathToTemplate,
 			Wg:          &sync.WaitGroup{},
 		}, nil
 	default:
