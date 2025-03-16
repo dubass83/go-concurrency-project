@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/dubass83/go-concurrency-project/utils"
+	"github.com/rs/zerolog/log"
 	"github.com/vanng822/go-premailer/premailer"
 	"github.com/wneessen/go-mail"
 )
@@ -187,4 +188,17 @@ func builPlainTextMessage(templ string, message map[string]any) (string, error) 
 	}
 
 	return tpl.String(), nil
+}
+
+func (app *Server) ListenForMail() {
+	for {
+		select {
+		case msg := <-app.Mail.MailerChan:
+			go app.Mail.Sender.SendEmail(msg, app.Mail.ErrChan)
+		case err := <-app.Mail.ErrChan:
+			log.Error().Err(err)
+		case <-app.Mail.DoneChan:
+			return
+		}
+	}
 }
