@@ -58,7 +58,7 @@ func main() {
 	session := initSessions(conf)
 
 	// create channels
-	mailChan := make(chan Message)
+	mailChan := make(chan Message, 100)
 	errChan := make(chan error)
 	doneChan := make(chan bool)
 
