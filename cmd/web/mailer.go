@@ -21,6 +21,7 @@ type Mail struct {
 
 type EmailSender interface {
 	SendEmail(email Message, errChan chan error)
+	WaitForSending()
 }
 
 type Message struct {
@@ -71,6 +72,7 @@ func (sender *MailTrapSender) SendEmail(
 	email Message,
 	errChan chan error,
 ) {
+	defer sender.Wg.Done()
 	if email.Template == "" {
 		email.Template = "mail"
 	}
@@ -190,10 +192,15 @@ func builPlainTextMessage(templ string, message map[string]any) (string, error) 
 	return tpl.String(), nil
 }
 
+func (sender *MailTrapSender) WaitForSending() {
+	sender.Wg.Add(1)
+}
+
 func (app *Server) ListenForMail() {
 	for {
 		select {
 		case msg := <-app.Mail.MailerChan:
+			app.Mail.Sender.WaitForSending()
 			go app.Mail.Sender.SendEmail(msg, app.Mail.ErrChan)
 		case err := <-app.Mail.ErrChan:
 			log.Error().Err(err)
