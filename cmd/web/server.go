@@ -15,4 +15,5 @@ type Server struct {
 	Session *scs.SessionManager
 	Store   data.Store
 	Wait    *sync.WaitGroup
+	Mail    Mail
 }

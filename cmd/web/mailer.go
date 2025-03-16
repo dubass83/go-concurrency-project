@@ -11,6 +11,13 @@ import (
 	"github.com/wneessen/go-mail"
 )
 
+type Mail struct {
+	MailerChan chan Message
+	ErrChan    chan error
+	DoneChan   chan bool
+	Sender     EmailSender
+}
+
 type EmailSender interface {
 	SendEmail(email Message, errChan chan error)
 }
@@ -38,9 +45,6 @@ type MailTrapSender struct {
 	SMTPAuth    mail.SMTPAuthType
 	TemplateDir string
 	Wg          *sync.WaitGroup
-	MailerChan  chan Message
-	ErrChan     chan error
-	DoneChan    chan bool
 }
 
 func NewMailSender(conf utils.Config) (EmailSender, error) {

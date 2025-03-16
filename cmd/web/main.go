@@ -58,6 +58,23 @@ func main() {
 	session := initSessions(conf)
 
 	// create channels
+	mailChan := make(chan Message)
+	errChan := make(chan error)
+	doneChan := make(chan bool)
+
+	// set up mail
+	sender, err := NewMailSender(conf)
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Msg("failed to create new mail sender")
+	}
+	mail := Mail{
+		MailerChan: mailChan,
+		ErrChan:    errChan,
+		DoneChan:   doneChan,
+		Sender:     sender,
+	}
 
 	// create waitgroup
 	wg := sync.WaitGroup{}
@@ -69,11 +86,10 @@ func main() {
 		Store:   data.NewStore(connPool),
 		Session: session,
 		Wait:    &wg,
+		Mail:    mail,
 	}
 	// run db migration
 	app.runDbMigration()
-
-	// set up mail
 
 	// listen for the signals
 	go app.ListenForShutdown()

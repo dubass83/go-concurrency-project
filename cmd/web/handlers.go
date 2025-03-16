@@ -85,13 +85,6 @@ func (app *Server) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
-	sender, err := NewMailSender(app.Config)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to create new mail sender")
-		app.Session.Put(r.Context(), "error", "failed to send test email")
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
 
 	email := Message{
 		From:      "Maks",
@@ -101,8 +94,6 @@ func (app *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 		Data:      "Hello world",
 	}
 
-	errChan := make(chan error)
-
-	sender.SendEmail(email, errChan)
+	app.Mail.Sender.SendEmail(email, app.Mail.ErrChan)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
