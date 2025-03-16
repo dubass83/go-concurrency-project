@@ -51,6 +51,13 @@ func (app *Server) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 	err = utils.CheckPassword(password, user.Password.String)
 	if err != nil {
 		log.Error().Err(err).Msg("invalid credentials")
+		// send messages asynchronously with channels
+		msg := Message{
+			To:      []string{email},
+			Subject: "Failed log in attempt",
+			Data:    "invalid login attempt!",
+		}
+		app.Mail.MailerChan <- msg
 		app.Session.Put(r.Context(), "error", "invalid credentials")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return

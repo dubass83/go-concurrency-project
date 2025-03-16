@@ -181,14 +181,14 @@ func (app *Server) ListenForShutdown() {
 
 func (app *Server) shutdown() {
 	log.Info().Msg("starting shutdown process for the app...")
-	app.Mail.DoneChan <- true
 	app.Wait.Wait()
-	close(app.Mail.MailerChan)
-	close(app.Mail.ErrChan)
-	close(app.Mail.DoneChan)
+	app.Mail.DoneChan <- true
 
 	log.Info().Msg("all chanels will be stoped and app will be prepared for gracefully shutdown")
 	// TODO close all chanels
+	close(app.Mail.MailerChan)
+	close(app.Mail.ErrChan)
+	close(app.Mail.DoneChan)
 }
 
 // runDbMigration run db migration from file to db
