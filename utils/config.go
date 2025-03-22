@@ -28,6 +28,7 @@ type Config struct {
 	EmailEncryption         string        `mapstructure:"EMAIL_ENCRYPTION"`
 	SenderName              string        `mapstructure:"SENDER_NAME"`
 	SenderEmail             string        `mapstructure:"SENDER_EMAIL"`
+	TokenSecret             string        `mapstructure:"TOKEN_SECRET"`
 }
 
 // LoadConfig
