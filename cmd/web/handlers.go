@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"html/template"
 	"net/http"
 
+	data "github.com/dubass83/go-concurrency-project/data/sqlc"
 	"github.com/dubass83/go-concurrency-project/utils"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
@@ -84,7 +87,62 @@ func (app *Server) RegisterPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Server) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to parse the form from the request")
+	}
 
+	HashPass, err := utils.HashPassword(r.Form.Get("password"))
+	if err != nil {
+		log.Error().Err(err).Msg("failed to generate hash for a new user password from the request")
+	}
+
+	arg := data.InsertUserParams{
+		Email: pgtype.Text{
+			String: r.Form.Get("email"),
+			Valid:  true,
+		},
+		FirstName: pgtype.Text{
+			String: r.Form.Get("first-name"),
+			Valid:  true,
+		},
+		LastName: pgtype.Text{
+			String: r.Form.Get("last-name"),
+			Valid:  true,
+		},
+		Password: pgtype.Text{
+			String: HashPass,
+			Valid:  true,
+		},
+		UserActive: pgtype.Int4{
+			Int32: 0,
+			Valid: true,
+		},
+	}
+	_, err = app.Store.InsertUser(context.Background(), arg)
+	if err != nil {
+		log.Error().Err(err).Msg("failed insert a user to the database")
+		app.Session.Put(r.Context(), "error", "Unable to create user.")
+		http.Redirect(w, r, "/register", http.StatusSeeOther)
+	}
+
+	// send activation email
+	url := fmt.Sprintf("http://localhost:%s/activate?email=%s", app.Config.WebPort, r.Form.Get("email"))
+	signedURL := app.GenerateTokenFromString(url)
+	log.Info().Msg(signedURL)
+
+	msg := Message{
+		To:       []string{r.Form.Get("email")},
+		Subject:  "Activate your account",
+		Template: "confirmation-email",
+		Data:     template.HTML(signedURL),
+	}
+
+	app.Mail.MailerChan <- msg
+
+	// redirect user to the login page
+	app.Session.Put(r.Context(), "flash", "Confirmation email sent. Check your email.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *Server) ActivateAccount(w http.ResponseWriter, r *http.Request) {
