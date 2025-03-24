@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	data "github.com/dubass83/go-concurrency-project/data/sqlc"
 	"github.com/rs/zerolog/log"
 )
 
@@ -20,7 +21,7 @@ type TemplateData struct {
 	Error         string
 	Authenticated bool
 	Now           time.Time
-	// User *data.User
+	User          *data.User
 }
 
 func (app *Server) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
@@ -68,7 +69,12 @@ func (app *Server) AddDefaultData(td *TemplateData, r *http.Request) *TemplateDa
 	td.Flash = app.Session.PopString(r.Context(), "flash")
 	td.Warning = app.Session.PopString(r.Context(), "warning")
 	td.Error = app.Session.PopString(r.Context(), "error")
-	td.Authenticated = app.IsAuthenticated(r)
+	if app.IsAuthenticated(r) {
+		td.Authenticated = true
+		if u, ok := app.Session.Get(r.Context(), "user").(data.User); ok {
+			td.User = &u
+		}
+	}
 	td.Now = time.Now()
 	log.Debug().Msgf("td: %v", td)
 	return td
