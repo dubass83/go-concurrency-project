@@ -8,7 +8,7 @@ func (app *Server) MountHandlers() {
 	app.Router.Get("/logout", app.Logout)
 	app.Router.Get("/register", app.RegisterPage)
 	app.Router.Post("/register", app.PostRegisterPage)
-	app.Router.Get("/activate-account", app.ActivateAccount)
+	app.Router.Get("/activate", app.ActivateAccount)
 
 	app.Router.Get("/test-email", app.SendTestEmail)
 }

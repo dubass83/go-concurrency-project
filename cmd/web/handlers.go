@@ -146,7 +146,47 @@ func (app *Server) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Server) ActivateAccount(w http.ResponseWriter, r *http.Request) {
+	// verify token from URL
+	url := r.RequestURI
+	testURL := fmt.Sprintf("http://localhost:%s%s", app.Config.WebPort, url)
+	log.Info().Msg(testURL)
+	ok := app.VerifyToken(testURL)
 
+	if !ok {
+		app.Session.Put(r.Context(), "error", "Invalid token.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	// Make user Active
+	argEmaill := pgtype.Text{
+		String: r.URL.Query().Get("email"),
+		Valid:  true,
+	}
+
+	u, err := app.Store.GetUserByEmail(context.Background(), argEmaill)
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "No such user in the Database.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	argUpdate := data.UpdateUserParams{
+		ID: u.ID,
+		UserActive: pgtype.Int4{
+			Int32: 1,
+			Valid: true,
+		},
+	}
+
+	_, err = app.Store.UpdateUser(context.Background(), argUpdate)
+	if err != nil {
+		log.Error().Err(err)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	app.Session.Put(r.Context(), "flash", "Acount is active. Now you can login to your account.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
