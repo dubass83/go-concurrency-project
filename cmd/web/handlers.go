@@ -202,3 +202,28 @@ func (app *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 	app.Mail.Sender.SendEmail(email, app.Mail.ErrChan)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+func (app *Server) ChooseSubscription(w http.ResponseWriter, r *http.Request) {
+	if !app.Session.Exists(r.Context(), "userID") {
+		app.Session.Put(r.Context(), "warning", "You must log in to see this page!")
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		return
+	}
+
+	arg := data.GetAllPlansParams{
+		Limit:  10,
+		Offset: 0,
+	}
+	plans, err := app.Store.GetAllPlans(context.Background(), arg)
+	if err != nil {
+		log.Error().Err(err)
+		return
+	}
+	dataMap := make(map[string]any)
+	dataMap["plans"] = plans
+
+	app.render(w, r, "plans.page.gohtml", &TemplateData{
+		DataMap: dataMap,
+	})
+
+}
