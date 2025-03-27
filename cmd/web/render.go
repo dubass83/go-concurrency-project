@@ -22,6 +22,7 @@ type TemplateData struct {
 	Authenticated bool
 	Now           time.Time
 	User          *data.User
+	UPlan         *data.UserPlan
 }
 
 func (app *Server) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
@@ -73,6 +74,9 @@ func (app *Server) AddDefaultData(td *TemplateData, r *http.Request) *TemplateDa
 		td.Authenticated = true
 		if u, ok := app.Session.Get(r.Context(), "user").(data.User); ok {
 			td.User = &u
+		}
+		if up, ok := app.Session.Get(r.Context(), "user-plan").(data.UserPlan); ok {
+			td.UPlan = &up
 		}
 	}
 	td.Now = time.Now()

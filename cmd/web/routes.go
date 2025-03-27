@@ -9,6 +9,7 @@ func (app *Server) MountHandlers() {
 	app.Router.Get("/register", app.RegisterPage)
 	app.Router.Post("/register", app.PostRegisterPage)
 	app.Router.Get("/activate", app.ActivateAccount)
+	app.Router.Get("/plans", app.ChooseSubscription)
 
 	app.Router.Get("/test-email", app.SendTestEmail)
 }

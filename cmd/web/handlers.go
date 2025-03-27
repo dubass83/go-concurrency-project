@@ -5,12 +5,22 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 
 	data "github.com/dubass83/go-concurrency-project/data/sqlc"
 	"github.com/dubass83/go-concurrency-project/utils"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog/log"
 )
+
+type formatedPlans struct {
+	ID                  int32     `json:"id"`
+	PlanName            string    `json:"plan_name"`
+	PlanAmount          int32     `json:"plan_amount"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
+	PlanAmountFormatted string    `json:"plan_amount_formatted"`
+}
 
 func (app *Server) HomePage(w http.ResponseWriter, r *http.Request) {
 	log.Debug().Msg("start rendering the home page")
@@ -66,6 +76,16 @@ func (app *Server) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//check if user has a plan add to the session
+	userPlan, err := app.Store.GetOneUserPlan(context.Background(), pgtype.Int4{
+		Int32: user.ID,
+		Valid: true,
+	})
+	if err == nil {
+		app.Session.Put(r.Context(), "user-plan", userPlan)
+		log.Debug().Any("user-plan", userPlan)
+	}
+
 	// login user
 	app.Session.Put(r.Context(), "userID", user.ID)
 	app.Session.Put(r.Context(), "user", user)
@@ -73,6 +93,7 @@ func (app *Server) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 	app.Session.Put(r.Context(), "flash", "Successful login!")
 	// redirect to the home page after successful login
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+	log.Info().Msg("successfull log in")
 }
 
 func (app *Server) Logout(w http.ResponseWriter, r *http.Request) {
@@ -219,11 +240,30 @@ func (app *Server) ChooseSubscription(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err)
 		return
 	}
+
+	fmtPlans := planAmountFormatted(plans)
+
 	dataMap := make(map[string]any)
-	dataMap["plans"] = plans
+	dataMap["plans"] = fmtPlans
 
 	app.render(w, r, "plans.page.gohtml", &TemplateData{
 		DataMap: dataMap,
 	})
 
+}
+
+func planAmountFormatted(plans []data.Plan) []formatedPlans {
+	result := []formatedPlans{}
+	for _, p := range plans {
+		formatedPlan := formatedPlans{
+			PlanAmountFormatted: fmt.Sprintf("$%.2f", float64(p.PlanAmount.Int32)/100),
+			ID:                  p.ID,
+			PlanName:            p.PlanName.String,
+			PlanAmount:          p.PlanAmount.Int32,
+			CreatedAt:           p.CreatedAt.Time,
+			UpdatedAt:           p.UpdatedAt.Time,
+		}
+		result = append(result, formatedPlan)
+	}
+	return result
 }

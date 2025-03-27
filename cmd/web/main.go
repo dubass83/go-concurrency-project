@@ -20,6 +20,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gomodule/redigo/redis"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -150,6 +151,10 @@ func poolConfig(conf utils.Config) *pgxpool.Config {
 
 func initSessions(config utils.Config) *scs.SessionManager {
 	gob.Register(data.User{})
+	gob.Register(data.UserPlan{})
+	gob.Register(pgtype.Int4{})
+	gob.Register(pgtype.Text{})
+	gob.Register(pgtype.Timestamp{})
 	// setup session
 	session := scs.New()
 	session.Store = redisstore.New(initRedis(config))
