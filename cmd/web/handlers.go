@@ -225,11 +225,11 @@ func (app *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Server) ChooseSubscription(w http.ResponseWriter, r *http.Request) {
-	if !app.Session.Exists(r.Context(), "userID") {
-		app.Session.Put(r.Context(), "warning", "You must log in to see this page!")
-		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-		return
-	}
+	// if !app.Session.Exists(r.Context(), "userID") {
+	// 	app.Session.Put(r.Context(), "warning", "You must log in to see this page!")
+	// 	http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+	// 	return
+	// }
 
 	arg := data.GetAllPlansParams{
 		Limit:  10,
@@ -266,4 +266,8 @@ func planAmountFormatted(plans []data.Plan) []formatedPlans {
 		result = append(result, formatedPlan)
 	}
 	return result
+}
+
+func (app *Server) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+
 }
