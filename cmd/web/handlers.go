@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"time"
 
 	data "github.com/dubass83/go-concurrency-project/data/sqlc"
@@ -225,11 +226,6 @@ func (app *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Server) ChooseSubscription(w http.ResponseWriter, r *http.Request) {
-	// if !app.Session.Exists(r.Context(), "userID") {
-	// 	app.Session.Put(r.Context(), "warning", "You must log in to see this page!")
-	// 	http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-	// 	return
-	// }
 
 	arg := data.GetAllPlansParams{
 		Limit:  10,
@@ -269,5 +265,21 @@ func planAmountFormatted(plans []data.Plan) []formatedPlans {
 }
 
 func (app *Server) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
 
+	planId, _ := strconv.Atoi(id)
+
+	plan, err := app.Store.GetOnePlan(context.TODO(), int32(planId))
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "Unable to find plan!")
+		http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
+		return
+	}
+
+	user, ok := app.Session.Get(r.Context(), "user").(data.User)
+	if !ok {
+		app.Session.Put(r.Context(), "error", "Log in first!")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 }
