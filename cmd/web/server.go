@@ -10,10 +10,12 @@ import (
 )
 
 type Server struct {
-	Config  utils.Config
-	Router  *chi.Mux
-	Session *scs.SessionManager
-	Store   data.Store
-	Wait    *sync.WaitGroup
-	Mail    Mail
+	Config      utils.Config
+	Router      *chi.Mux
+	Session     *scs.SessionManager
+	Store       data.Store
+	Wait        *sync.WaitGroup
+	Mail        Mail
+	ErrChan     chan error
+	ErrChanDone chan bool
 }

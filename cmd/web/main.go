@@ -82,12 +82,14 @@ func main() {
 
 	// set up the application config
 	app := Server{
-		Config:  conf,
-		Router:  chi.NewRouter(),
-		Store:   data.NewStore(connPool),
-		Session: session,
-		Wait:    &wg,
-		Mail:    mail,
+		Config:      conf,
+		Router:      chi.NewRouter(),
+		Store:       data.NewStore(connPool),
+		Session:     session,
+		Wait:        &wg,
+		Mail:        mail,
+		ErrChan:     make(chan error),
+		ErrChanDone: make(chan bool),
 	}
 	// listen for new messages to send
 	go app.ListenForMail()
@@ -97,6 +99,9 @@ func main() {
 
 	// listen for the signals
 	go app.ListenForShutdown()
+
+	// listen for the errors
+	go app.ListenForErrors()
 
 	// listen for web connections
 	app.serve()
@@ -188,12 +193,15 @@ func (app *Server) shutdown() {
 	log.Info().Msg("starting shutdown process for the app...")
 	app.Wait.Wait()
 	app.Mail.DoneChan <- true
+	app.ErrChanDone <- true
 
 	log.Info().Msg("all chanels will be stoped and app will be prepared for gracefully shutdown")
 	// TODO close all chanels
 	close(app.Mail.MailerChan)
 	close(app.Mail.ErrChan)
 	close(app.Mail.DoneChan)
+	close(app.ErrChan)
+	close(app.ErrChanDone)
 }
 
 // runDbMigration run db migration from file to db
@@ -210,4 +218,16 @@ func (app *Server) runDbMigration() {
 			Msg("can not run migration up")
 	}
 	log.Info().Msg("successfully run db migration")
+}
+
+func (app *Server) ListenForErrors() {
+	for {
+		select {
+		case err := <-app.ErrChan:
+			log.Error().Err(err)
+		case <-app.ErrChanDone:
+			log.Info().Msg("finished listen for the errors")
+			return
+		}
+	}
 }
