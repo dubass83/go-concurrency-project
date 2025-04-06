@@ -340,7 +340,7 @@ func (app *Server) generateManual(u data.User, p *data.Plan) *gofpdf.Fpdf {
 
 	time.Sleep(5 * time.Second)
 
-	t := importer.ImportPage(pdf, "./pdf/manual.pdf", 1, "/MadiaBox")
+	t := importer.ImportPage(pdf, "./pdf/manual.pdf", 1, "/MediaBox")
 	pdf.AddPage()
 
 	importer.UseImportedTemplate(pdf, t, 0, 0, 215.9, 0)
