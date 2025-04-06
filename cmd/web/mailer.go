@@ -25,16 +25,17 @@ type EmailSender interface {
 }
 
 type Message struct {
-	From        string
-	FromEmail   string
-	Subject     string
-	To          []string
-	CC          []string
-	BCC         []string
-	Data        any
-	Message     map[string]any
-	AttachFiles []string
-	Template    string
+	From          string
+	FromEmail     string
+	Subject       string
+	To            []string
+	CC            []string
+	BCC           []string
+	Data          any
+	Message       map[string]any
+	AttachFiles   []string
+	AttachmentMap map[string]string
+	Template      string
 }
 
 type MailTrapSender struct {
@@ -83,6 +84,10 @@ func (sender *MailTrapSender) SendEmail(
 		email.FromEmail = sender.FromEmail
 	}
 
+	if email.AttachmentMap == nil {
+		email.AttachmentMap = make(map[string]string)
+	}
+
 	m := mail.NewMsg()
 	if err := m.FromFormat(email.From, email.FromEmail); err != nil {
 		errChan <- fmt.Errorf("failed to set from address: %s", err)
@@ -120,6 +125,10 @@ func (sender *MailTrapSender) SendEmail(
 
 	for _, file := range email.AttachFiles {
 		m.AttachFile(file)
+	}
+
+	for key, value := range email.AttachmentMap {
+		m.AttachFile(value, mail.WithFileName(key))
 	}
 
 	c, err := mail.NewClient(

@@ -11,6 +11,8 @@ import (
 	data "github.com/dubass83/go-concurrency-project/data/sqlc"
 	"github.com/dubass83/go-concurrency-project/utils"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/phpdave11/gofpdf"
+	"github.com/phpdave11/gofpdf/contrib/gofpdi"
 	"github.com/rs/zerolog/log"
 )
 
@@ -288,7 +290,7 @@ func (app *Server) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer app.Wait.Done()
 
-		invoice, err := app.getInvoice(user, plan)
+		invoice, err := app.getInvoice(&plan)
 		if err != nil {
 			app.ErrChan <- err
 		}
@@ -302,9 +304,60 @@ func (app *Server) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 
 		app.Mail.MailerChan <- msg
 	}()
+
+	app.Wait.Add(1)
+	go func() {
+		defer app.Wait.Done()
+
+		pdf := app.generateManual(user, &plan)
+		err := pdf.OutputFileAndClose(fmt.Sprintf("./tmp/%d_user_manual.pdf", user.ID))
+		if err != nil {
+			app.ErrChan <- err
+			return
+		}
+
+		msg := Message{
+			To:      []string{user.Email.String},
+			Subject: "Yuor manual",
+			Data:    "Your user manual is attached",
+			AttachmentMap: map[string]string{
+				"Manual.pdf": fmt.Sprintf("./tmp/%d_user_manual.pdf", user.ID),
+			},
+		}
+		app.Mail.MailerChan <- msg
+
+	}()
+
+	app.Session.Put(r.Context(), "flash", "Subscribed!")
+	http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
 }
 
-func (app *Server) getInvoice(u data.User, p data.Plan) (string, error) {
+func (app *Server) generateManual(u data.User, p *data.Plan) *gofpdf.Fpdf {
+	pdf := gofpdf.New("P", "mm", "Letter", "")
+	pdf.SetMargins(10, 13, 10)
+
+	importer := gofpdi.NewImporter()
+
+	time.Sleep(5 * time.Second)
+
+	t := importer.ImportPage(pdf, "./pdf/manual.pdf", 1, "/MadiaBox")
+	pdf.AddPage()
+
+	importer.UseImportedTemplate(pdf, t, 0, 0, 215.9, 0)
+
+	pdf.SetX(75)
+	pdf.SetY(150)
+
+	pdf.SetFont("Arial", "", 12)
+
+	pdf.MultiCell(0, 4, fmt.Sprintf("%s %s", u.FirstName.String, u.LastName.String), "", "C", false)
+	pdf.Ln(5)
+	pdf.MultiCell(0, 4, fmt.Sprintf("%s User Guide", p.PlanName.String), "", "C", false)
+
+	return pdf
+}
+
+func (app *Server) getInvoice(p *data.Plan) (string, error) {
 	//dummy function
 	return fmt.Sprintf("$%.2f", float64(p.PlanAmount.Int32)/100), nil
 }
