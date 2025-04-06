@@ -31,3 +31,5 @@ dbml-error.log
 
 # OS specific files
 .DS_Store
+
+./tmp
