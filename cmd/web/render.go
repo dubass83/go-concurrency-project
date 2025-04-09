@@ -37,8 +37,8 @@ func (app *Server) render(w http.ResponseWriter, r *http.Request, t string, td *
 	var templateSlice []string
 	templateSlice = append(templateSlice, partials...)
 	templateSlice = append(templateSlice, fmt.Sprintf("%s/%s", app.Config.PathToTemplate, t))
-	log.Debug().Msgf("templateSlice: %v", templateSlice)
-	log.Debug().Msgf("Template path: %s", app.Config.PathToTemplate)
+	// log.Debug().Msgf("templateSlice: %v", templateSlice)
+	// log.Debug().Msgf("Template path: %s", app.Config.PathToTemplate)
 
 	// Check if files exist
 	for _, path := range templateSlice {

@@ -86,7 +86,7 @@ func (app *Server) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 	})
 	if err == nil {
 		app.Session.Put(r.Context(), "user-plan", userPlan)
-		log.Debug().Any("user-plan", userPlan)
+		// log.Debug().Any("user-plan", userPlan)
 	}
 
 	// login user
@@ -327,6 +327,21 @@ func (app *Server) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 		app.Mail.MailerChan <- msg
 
 	}()
+
+	// subscribe user to the choosen plan
+	arg := data.SubscribeUserToPlanParams{
+		UserID: user.ID,
+		PlanID: plan.ID,
+	}
+	result, err := app.Store.SubscribeUserToPlan(context.TODO(), arg)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to subscribe user to plan")
+		app.Session.Put(r.Context(), "error", "Unable to subscribe to the plan!")
+		http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
+		return
+	}
+
+	app.Session.Put(r.Context(), "user-plan", result.UserPlan)
 
 	app.Session.Put(r.Context(), "flash", "Subscribed!")
 	http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
