@@ -1,7 +1,6 @@
+include .env
+export
 BINARY_NAME=myapp
-DSN="host=localhost port=5432 user=postgres password=password dbname=concurrency sslmode=disable timezone=UTC connect_timeout=5"
-DB_URL="postgresql://postgres:password@localhost:5432/concurrency?sslmode=disable"
-REDIS="127.0.0.1:6379"
 
 ## build: Build binary
 build:
@@ -9,21 +8,24 @@ build:
 	env CGO_ENABLED=0  go build -ldflags="-s -w" -o ${BINARY_NAME} ./cmd/web
 	@echo "Built!"
 
-## run: builds and runs the application
-run: build
+## run: go run
+run:
 	@echo "Starting..."
-	@env DSN=${DSN} REDIS_URL=${REDIS} ./${BINARY_NAME} &
-	@echo "Started!"
+	go run ./cmd/web
 
 ## clean: runs go clean and deletes binaries
 clean:
 	@echo "Cleaning..."
 	@go clean
-	@rm ${BINARY_NAME}
+	@rm ${BINARY_NAME} || true
+	@rm tmp/*.pdf || true
 	@echo "Cleaned!"
 
-## start: an alias to run
-start: run
+## start: build and run compiled app
+start: build
+	@echo "Starting..."
+	@env ./${BINARY_NAME} &
+	@echo "Started!"
 
 ## stop: stops the running application
 stop:
