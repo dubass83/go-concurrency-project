@@ -22,7 +22,7 @@ var testApp Server
 func TestMain(m *testing.M) {
 
 	// read config
-	config, err := utils.LoadConfig("./test_conf")
+	config, err := utils.LoadConfig("../../test_conf")
 	if err != nil {
 		log.Fatal().
 			Err(err).
@@ -93,6 +93,9 @@ func TestMain(m *testing.M) {
 			}
 		}
 	}()
+
+	testApp.AddMidelware()
+	testApp.MountHandlers()
 
 	os.Exit(m.Run())
 }
