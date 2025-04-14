@@ -80,7 +80,7 @@ func (app *Server) AddDefaultData(td *TemplateData, r *http.Request) *TemplateDa
 		}
 	}
 	td.Now = time.Now()
-	log.Debug().Msgf("td: %v", td)
+	// log.Debug().Msgf("td: %v", td)
 	return td
 }
 
