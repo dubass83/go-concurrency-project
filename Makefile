@@ -57,3 +57,6 @@ migrate_down1:
 
 sqlc:
 	sqlc generate
+
+mock:
+	mockgen -package mockdb -destination data/mock/store.go github.com/dubass83/go-concurrency-project/data/sqlc Store
