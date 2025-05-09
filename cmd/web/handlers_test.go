@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	mockdb "github.com/dubass83/go-concurrency-project/data/mock"
 	data "github.com/dubass83/go-concurrency-project/data/sqlc"
@@ -79,75 +78,10 @@ func TestGetHandler(t *testing.T) {
 
 func TestPostHandler(t *testing.T) {
 
-	hash, err := utils.HashPassword("Qw12345678!")
-	require.NoError(t, err)
-
-	user := data.User{
-		ID: 1,
-		Email: pgtype.Text{
-			String: "admin@example.com",
-			Valid:  true,
-		},
-		FirstName: pgtype.Text{
-			String: "Fake",
-			Valid:  true,
-		},
-		LastName: pgtype.Text{
-			String: "Admin",
-			Valid:  true,
-		},
-		Password: pgtype.Text{
-			String: hash,
-			Valid:  true,
-		},
-		CreatedAt: pgtype.Timestamp{
-			Time:  time.Now(),
-			Valid: true,
-		},
-		UpdatedAt: pgtype.Timestamp{
-			Time:  time.Now(),
-			Valid: true,
-		},
-	}
-
-	// plan := data.Plan{
-	// 	ID: 1,
-	// 	PlanName: pgtype.Text{
-	// 		String: "fakePlan",
-	// 	},
-	// 	PlanAmount: pgtype.Int4{
-	// 		Int32: 100,
-	// 		Valid: true,
-	// 	},
-	// 	CreatedAt: pgtype.Timestamp{
-	// 		Time:  time.Now(),
-	// 		Valid: true,
-	// 	},
-	// 	UpdatedAt: pgtype.Timestamp{
-	// 		Time:  time.Now(),
-	// 		Valid: true,
-	// 	},
-	// }
-
-	userPlan := data.UserPlan{
-		ID: 1,
-		UserID: pgtype.Int4{
-			Int32: 1,
-			Valid: true,
-		},
-		PlanID: pgtype.Int4{
-			Int32: 1,
-			Valid: true,
-		},
-		CreatedAt: pgtype.Timestamp{
-			Time:  time.Now(),
-			Valid: true,
-		},
-		UpdatedAt: pgtype.Timestamp{
-			Time:  time.Now(),
-			Valid: true,
-		},
-	}
+	pass := "Qw12345678!"
+	user := utils.RandomUser(pass)
+	plan := utils.RandomPlan()
+	userPlan := utils.TestUserPlan(user.ID, plan.ID)
 
 	pagePostTests := []struct {
 		name               string
@@ -165,17 +99,25 @@ func TestPostHandler(t *testing.T) {
 			expectedStatusCode: http.StatusSeeOther,
 			handler:            testApp.PostLoginPage,
 			postedData: url.Values{
-				"email":    {"admin@example.com"},
-				"password": {"Qw12345678!"},
+				"email":    {user.Email.String},
+				"password": {pass},
 			},
 			buildStubs: func(store *mockdb.MockStore) {
+				argUser := pgtype.Text{
+					String: user.Email.String,
+					Valid:  true,
+				}
 				store.EXPECT().
-					GetUserByEmail(gomock.Any(), gomock.Any()).
+					GetUserByEmail(gomock.Any(), gomock.Eq(argUser)).
 					Times(1).
 					Return(user, nil)
 
+				argPlan := pgtype.Int4{
+					Int32: user.ID,
+					Valid: true,
+				}
 				store.EXPECT().
-					GetOneUserPlan(gomock.Any(), gomock.Any()).
+					GetOneUserPlan(gomock.Any(), gomock.Eq(argPlan)).
 					Times(1).
 					Return(userPlan, nil)
 			},
@@ -186,6 +128,8 @@ func TestPostHandler(t *testing.T) {
 
 		rr := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", pt.url, strings.NewReader(pt.postedData.Encode()))
+		// Add this line to set the correct Content-Type header for form data
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		ctx := getCtx(req)
 		req = req.WithContext(ctx)
