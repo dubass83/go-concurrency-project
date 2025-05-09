@@ -64,6 +64,7 @@ func (app *Server) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check user password
+	log.Debug().Msgf("pass: %s  hash: %s", password, user.Password.String)
 	err = utils.CheckPassword(password, user.Password.String)
 	if err != nil {
 		log.Error().Err(err).Msg("invalid credentials")
