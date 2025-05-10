@@ -91,12 +91,14 @@ func TestPostHandler(t *testing.T) {
 		postedData         url.Values
 		sessionData        map[string]any
 		expectedHTML       string
+		expectedSessionKey string
 		buildStubs         func(store *mockdb.MockStore)
 	}{
 		{
 			name:               "loginPage",
 			url:                "/login",
 			expectedStatusCode: http.StatusSeeOther,
+			expectedSessionKey: "userID",
 			handler:            testApp.PostLoginPage,
 			postedData: url.Values{
 				"email":    {user.Email.String},
@@ -155,6 +157,9 @@ func TestPostHandler(t *testing.T) {
 		if len(pt.expectedHTML) > 0 {
 			html := rr.Body.String()
 			require.Contains(t, html, pt.expectedHTML, fmt.Sprintf("test name: %s", pt.name))
+		}
+		if len(pt.expectedSessionKey) > 0 {
+			require.True(t, testApp.Session.Exists(ctx, pt.expectedSessionKey), fmt.Sprintf("test name: %s", pt.name))
 		}
 	}
 }
