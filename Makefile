@@ -40,6 +40,9 @@ restart: stop start
 test:
 	go test -v ./...
 
+race_test:
+	go test -race -v ./...
+
 new_migration:
 	migrate create -ext sql -dir data/migration -seq ${name}
 

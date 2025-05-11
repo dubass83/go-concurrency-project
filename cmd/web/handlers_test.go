@@ -183,7 +183,7 @@ func TestGetHandlerSubscribeToPlan(t *testing.T) {
 	}{
 		{
 			name:    "SubscribeToPlan",
-			url:     fmt.Sprintf("/subscribe?id=%d", user.ID),
+			url:     fmt.Sprintf("/subscribe?id=%d", plan.ID),
 			handler: testApp.SubscribeToPlan,
 			sessionData: map[string]any{
 				"userID": user.ID,
@@ -202,10 +202,13 @@ func TestGetHandlerSubscribeToPlan(t *testing.T) {
 					UserID: user.ID,
 					PlanID: plan.ID,
 				}
+				res := data.SubscribeUserToPlanResult{
+					UserPlan: userPlan,
+				}
 				store.EXPECT().
 					SubscribeUserToPlan(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
-					Return(userPlan, nil)
+					Return(res, nil)
 			},
 		},
 	}
@@ -224,7 +227,17 @@ func TestGetHandlerSubscribeToPlan(t *testing.T) {
 			}
 		}
 
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		store := mockdb.NewMockStore(ctrl)
+		pt.buildStubs(store)
+
+		testApp.Store = store
+
 		pt.handler.ServeHTTP(rr, req)
+		// wait for all gorutins will be finished
+		testApp.Wait.Wait()
 
 		require.Equal(t, pt.expectedStatusCode, rr.Code, fmt.Sprintf("test name: %s", pt.name))
 
