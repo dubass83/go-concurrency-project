@@ -310,7 +310,7 @@ func (app *Server) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 		defer app.Wait.Done()
 
 		pdf := app.generateManual(user, &plan)
-		err := pdf.OutputFileAndClose(fmt.Sprintf("./tmp/%d_user_manual.pdf", user.ID))
+		err := pdf.OutputFileAndClose(fmt.Sprintf("%s/%d_user_manual.pdf", app.Config.PathToTmp, user.ID))
 		if err != nil {
 			app.ErrChan <- err
 			return
@@ -321,7 +321,7 @@ func (app *Server) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 			Subject: "Yuor manual",
 			Data:    "Your user manual is attached",
 			AttachmentMap: map[string]string{
-				"Manual.pdf": fmt.Sprintf("./tmp/%d_user_manual.pdf", user.ID),
+				"Manual.pdf": fmt.Sprintf("%s/%d_user_manual.pdf", app.Config.PathToTmp, user.ID),
 			},
 		}
 		app.Mail.MailerChan <- msg
@@ -355,7 +355,9 @@ func (app *Server) generateManual(u data.User, p *data.Plan) *gofpdf.Fpdf {
 
 	time.Sleep(5 * time.Second)
 
-	t := importer.ImportPage(pdf, "./pdf/manual.pdf", 1, "/MediaBox")
+	pathToPDF := fmt.Sprintf("%s/manual.pdf", app.Config.PathToManual)
+
+	t := importer.ImportPage(pdf, pathToPDF, 1, "/MediaBox")
 	pdf.AddPage()
 
 	importer.UseImportedTemplate(pdf, t, 0, 0, 215.9, 0)

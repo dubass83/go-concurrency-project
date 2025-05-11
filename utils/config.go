@@ -21,6 +21,8 @@ type Config struct {
 	WebPort                 string        `mapstructure:"WEB_PORT"`
 	RedisURL                string        `mapstructure:"REDIS_URL"`
 	PathToTemplate          string        `mapstructure:"PATH_TO_TEMPLATE"`
+	PathToManual            string        `mapstructure:"PATH_TO_MANUAL"`
+	PathToTmp               string        `mapstructure:"PATH_TO_TMP"`
 	EmailTemplate           string        `mapstructure:"EMAIL_TEMPLATE"`
 	EmailService            string        `mapstructure:"EMAIL_SERVICE"`
 	EmailLogin              string        `mapstructure:"EMAIL_LOGIN"`
